@@ -21,14 +21,14 @@ void killCache(line** cache) {
 bool check_hit(long address, line* l, long tagMask) {
   bool ret_value = (l->valid && (l->tag == (address & tagMask)));
   if (ret_value) {
-    l->accesses++; //does this really go here?
+    l->accesses++;
     l->time = clock();
   }
   return ret_value;
 }
 
 int main() {
-    long start = clock();
+    clock_t start = clock();
 
     int setNum;
     int lineNum;
@@ -40,7 +40,8 @@ int main() {
     int s;
     int b;
     line** cache;
-    int accNumber;
+    int references;
+    int misses;
 
     printf("What kind of cache are we dealing with here?\n");
     scanf("%d", &setNum);
@@ -63,6 +64,7 @@ int main() {
             cache[i][j].valid = false;
             cache[i][j].index = 0;
             cache[i][j].accesses = 0;
+            cache[i][j].time = 0;
         }
     }
 
@@ -70,20 +72,18 @@ int main() {
     long sMask = ~(~0 << s) << b;
     long tMask = ~0 << (s + b);
 
-    long test;
-    //scanf("0x%lu", &test);
-    //printf("%lu", test);
-    if (check_hit(test, &cache[0][0], tMask)){
-        printf("true");
-    } else {
-        printf("false");
-    }
-
     printf("Please enter your addresses in hex form, or -1 to quit\n");
-    long address = 0;
+    char input[3];
+    unsigned long address = 0;
 
-    while(address != -1) {
-        scanf("%lu", &address);
+    while(strcmp("-1", input) != 0) {
+        scanf("%s", input);
+        if (strcmp("-1", input) == 0) {
+            break; 
+        } else {
+            sscanf(input, "%lx", &address);
+        }
+
         bool hit = false;
         for (int i = 0; i < lineNum; i++) {
             if (check_hit(address, &cache[(address & sMask) >> b][i], tMask)) {
@@ -92,19 +92,27 @@ int main() {
             }
         }
         if (hit) {
-            accNumber++;
-
+            printf("yes\n");
+            references++;
+            printf("%lx H\n", address);
         }
         else {
-            accNumber++;
+            printf("no\n");
+            references++;
+            misses++;
             bool done = false;
             while (!done) {
                 for (int i = 0; i < lineNum; i++) {
                     if (!cache[(address & sMask) >> b][i].valid) {
-                        //TODO take address and put it in the line
+                        cache[(address & sMask) >> b][i].valid = true;
+                        cache[(address & sMask) >> b][i].tag = (address & tMask);
+                        printf("%lx M\n", address);
                         done = true;
                         break;
                     }
+                }
+                if (done) {
+                    break;
                 }
                 if (strcmp(rp, "LFU") != 0) {
                     int temp = 100000;
@@ -115,7 +123,10 @@ int main() {
                     }
                     for (int i = 0; i < lineNum; i++) {
                         if (temp == cache[(address & sMask) >> b][i].accesses) {
-                            //TODO replace the line with the new address
+                            cache[(address & sMask) >> b][i].valid = true;
+                            cache[(address & sMask) >> b][i].tag = (address & tMask);
+                            printf("%lx M\n", address);
+                            done = true;
                             break;
                         }
                     }
@@ -128,7 +139,10 @@ int main() {
                     }
                     for (int i = 0; i < lineNum; i++) {
                         if (temp == cache[(address & sMask) >> b][i].time) {
-                            //TODO replace the line with the new address
+                            cache[(address & sMask) >> b][i].valid = true;
+                            cache[(address & sMask) >> b][i].tag = (address & tMask);
+                            printf("%lx M\n", address);
+                            done = true;
                             break;
                         }
                     }
@@ -136,7 +150,8 @@ int main() {
             }
         }
     }
-    long end = clock();
+    clock_t end = clock();
+    //printf("%d \n", misses/references);
     
     killCache(cache);
     return 0;
