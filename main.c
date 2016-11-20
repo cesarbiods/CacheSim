@@ -12,11 +12,21 @@ typedef struct {
     bool valid;
     int index;
     int accesses;
+    long time;
 } line;
 
 void killCache(line** cache) {
     free(*cache);
     free(cache);
+}
+
+bool check_hit(long address, line* l, long tagMask) {
+  bool ret_value = (l->valid && (l->tag == (address & tagMask)));
+  if (ret_value) {
+    l->accesses++;
+    l->time = clock();
+  }
+  return ret_value;
 }
 
 int main() {
@@ -31,10 +41,6 @@ int main() {
     int s;
     int b;
     line** cache;
-
-    clock_t start, end, total;
-    start = clock();
-    printf("%ld\n", start);
 
     printf("What kind of cache are we dealing with here?\n");
     scanf("%d", &setNum);
@@ -63,9 +69,6 @@ int main() {
     long bMask = ~(~0 << b);
     long sMask = ~(~0 << s) << b;
     long tMask = ~0 << (s + b);
-
-    end = clock();
-    printf("%ld\n", end);
 
     printf("Please enter your addresses in hex form, or -1 to quit\n");
     long address = 0;
