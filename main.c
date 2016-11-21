@@ -40,8 +40,8 @@ int main() {
     int s;
     int b;
     line** cache;
-    int references;
-    int misses;
+    float references = 0;
+    float misses = 0;
 
     printf("What kind of cache are we dealing with here?\n");
     scanf("%d", &setNum);
@@ -92,12 +92,10 @@ int main() {
             }
         }
         if (hit) {
-            printf("yes\n");
             references++;
             printf("%lx H\n", address);
         }
         else {
-            printf("no\n");
             references++;
             misses++;
             bool done = false;
@@ -151,7 +149,9 @@ int main() {
         }
     }
     clock_t end = clock();
-    //printf("%d \n", misses/references);
+    float mRate = ((misses/references) * 100);
+    int final = (int)(mRate < 0 ? (mRate - 0.5) : (mRate + 0.5));
+    printf("%d %lu\n", final, (end - start));
     
     killCache(cache);
     return 0;
