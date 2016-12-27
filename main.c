@@ -42,6 +42,7 @@ int main() {
     line** cache;
     float references = 0;
     float misses = 0;
+    float hits = 0;
 
     printf("What kind of cache are we dealing with here?\n");
     scanf("%d", &setNum);
@@ -73,7 +74,7 @@ int main() {
     long tMask = ~0 << (s + b);
 
     printf("Please enter your addresses in hex form, or -1 to quit\n");
-    char input[3];
+    char input[9];
     unsigned long address = 0;
 
     while(strcmp("-1", input) != 0) {
@@ -93,6 +94,7 @@ int main() {
         }
         if (hit) {
             references++;
+            hits++;
             printf("%lx H\n", address);
         }
         else {
@@ -149,9 +151,10 @@ int main() {
         }
     }
     clock_t end = clock();
+    int total = (hTime*hits) + ((hTime+mPenalty)*misses);
     float mRate = ((misses/references) * 100);
     int final = (int)(mRate < 0 ? (mRate - 0.5) : (mRate + 0.5));
-    printf("%d %lu\n", final, (end - start));
+    printf("%d %d\n", final, total);
     
     killCache(cache);
     return 0;
